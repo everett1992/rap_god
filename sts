@@ -1,0 +1,71 @@
+#!/bin/env ruby
+
+require 'optparse'
+require 'json'
+require 'open-uri'
+
+def options args
+  o = OpenStruct.new(artist: nil, song: nil)
+
+  opt_parser = OptionParser.new do |opts|
+    opts.banner = "Usage: #{$0} -a artist -s song"
+
+    opts.on('-a', '--artist=ARTIST', 'Search for this artist') do |artist|
+      o.artist = artist
+    end
+
+    opts.on('-s', '--song=SONG', 'Search for this song') do |song|
+      o.song = song
+    end
+
+    opts.on_tail('-h', '--help', 'Show this message') do
+      puts opts
+      exit
+    end
+  end
+  opt_parser.parse! args
+
+  return o
+end
+
+def say_lyrics artist, song
+  artist.gsub! ' ', '_'
+  song.gsub! ' ', '_'
+
+  url = "http://lyrics.wikia.com/api.php?artist=#{artist}&song=#{song}&fmt=realjson"
+  json = open(url).read
+  json = JSON.parse(json)
+  puts "#{json['artist']} - #{json['song']}"
+
+  lyrics = json['lyrics'].gsub(/["\'\(\)]/, '')
+
+  #puts json['lyrics']
+  puts lyrics
+  `echo "#{lyrics}" | festival --tts `
+end
+
+def search_artist artist
+  artist.gsub! ' ', '_'
+
+  json = open("http://lyrics.wikia.com/api.php?artist=#{artist}&fmt=realjson").read
+  json = JSON.parse(json)
+  puts json['artist']
+  json['albums'].each do |album|
+    puts album['album']
+    album['songs'].each { |song| puts "  - #{song}" }
+  end
+end
+
+def main
+  o = options ARGV
+  
+  if o.artist && o.song
+    say_lyrics o.artist, o.song
+  elsif o.artist && !o.song
+    search_artist o.artist
+  else
+    $stderr.puts "#{$0}: Missing required argument -a ARTIST"
+  end
+end
+
+main
