@@ -37,10 +37,11 @@ def say_lyrics artist, song
   json = JSON.parse(json)
   puts "#{json['artist']} - #{json['song']}"
 
-  ENV['lyrics'] =  json['lyrics']
-
-  puts json['lyrics']
-  `echo "$lyrics" | festival --tts `
+  json['lyrics'].split("\n").each do |lyrics|
+    ENV['lyrics'] =  lyrics
+    puts lyrics
+    `echo "$lyrics" | festival --tts `
+  end
 end
 
 def search_artist artist
