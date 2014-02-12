@@ -37,11 +37,10 @@ def say_lyrics artist, song
   json = JSON.parse(json)
   puts "#{json['artist']} - #{json['song']}"
 
-  lyrics = json['lyrics'].gsub(/["\'\(\)]/, '')
+  ENV['lyrics'] =  json['lyrics']
 
-  #puts json['lyrics']
-  puts lyrics
-  `echo "#{lyrics}" | festival --tts `
+  puts json['lyrics']
+  `echo "$lyrics" | festival --tts `
 end
 
 def search_artist artist
