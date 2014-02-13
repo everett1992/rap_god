@@ -4,6 +4,19 @@ require 'optparse'
 require 'json'
 require 'open-uri'
 
+class TTS
+  @@tts_command = ENV['tts_command']
+  @@tts_command ||= (RUBY_PLATFORM.include?('linux') ? 'festival --tts' : 'say' )
+
+  def self.say_lyrics lyrics
+    lyrics.split("\n").each do |line|
+      ENV['line'] =  line
+      puts line
+      `echo "$line" | #{@@tts_command} `
+    end
+  end
+end
+
 def options args
   o = OpenStruct.new(artist: nil, song: nil)
 
@@ -37,11 +50,7 @@ def say_lyrics artist, song
   json = JSON.parse(json)
   puts "#{json['artist']} - #{json['song']}"
 
-  json['lyrics'].split("\n").each do |lyrics|
-    ENV['lyrics'] =  lyrics
-    puts lyrics
-    `echo "$lyrics" | festival --tts `
-  end
+  TTS.say_lyrics(json['lyrics'])
 end
 
 def search_artist artist
